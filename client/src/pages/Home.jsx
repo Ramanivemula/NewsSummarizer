@@ -10,8 +10,19 @@ const LandingPage = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/news/latest");
-        setLatestNews(res.data.articles);
+        const res = await axios.get("/api/news/latest");
+        const data = res.data.articles || [];
+
+        const formattedNews = data.map((news, idx) => ({
+          title: news.title,
+          summary: news.summary || "No summary available",
+          url: news.url,
+          image: news.image || `https://source.unsplash.com/400x200/?news,headline,${idx}`,
+          publishedAt: news.publishedAt,
+          source: news.source || "Unknown"
+        }));
+
+        setLatestNews(formattedNews);
       } catch (err) {
         console.error("Error fetching latest news:", err.message);
       }
@@ -22,6 +33,7 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-white text-gray-800">
+      {/* Header */}
       <header className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-md py-6 px-8 flex justify-between items-center">
         <h1 className="text-3xl font-extrabold flex items-center gap-3 tracking-tight">
           <FaNewspaper className="text-4xl" /> MeraPaper
@@ -37,6 +49,7 @@ const LandingPage = () => {
         </div>
       </header>
 
+      {/* Hero */}
       <section
         className="relative h-[90vh] bg-cover bg-center flex items-center justify-center text-center px-6"
         style={{ backgroundImage: `url(${background})` }}
@@ -58,6 +71,7 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* How it Works */}
       <section className="py-20 bg-white text-center">
         <h3 className="text-4xl font-bold mb-14 text-purple-700">How MeraPaper Works</h3>
         <div className="flex flex-col md:flex-row justify-center items-center gap-10 px-6">
@@ -75,6 +89,7 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Latest News */}
       <section className="py-20 bg-gray-100 text-center">
         <h3 className="text-5xl font-extrabold mb-16 text-purple-700 tracking-widest">🗞️ Latest News</h3>
 
@@ -87,6 +102,11 @@ const LandingPage = () => {
                 key={index}
                 className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all p-6 flex flex-col justify-between text-left border border-gray-200 min-h-[340px] max-w-[360px] mx-auto"
               >
+                <img
+                  src={news.image}
+                  alt="News"
+                  className="w-full h-40 object-cover rounded-md mb-4"
+                />
                 <div className="space-y-4">
                   <h4 className="font-semibold text-lg md:text-xl text-gray-900 tracking-normal leading-snug line-clamp-2">
                     📰 {news.title}
@@ -95,7 +115,6 @@ const LandingPage = () => {
                     {news.summary}
                   </p>
                 </div>
-
                 <div className="mt-6">
                   <a
                     href={news.url}
@@ -105,7 +124,9 @@ const LandingPage = () => {
                   >
                     🔗 Read Full Article
                   </a>
-                  <p className="text-xs text-gray-400 mt-1">📅 {new Date(news.publishedAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    📅 {new Date(news.publishedAt).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
             ))

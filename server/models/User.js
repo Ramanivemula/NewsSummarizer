@@ -4,9 +4,14 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  newsTypes: [String],       // e.g., ["Sports", "Politics"]
-  country: String,
-  state: String,
+  country: {
+    type: String,
+    required: true
+  },
+  category: {
+    type: String,
+    required: true
+  },
   notifyDaily: { type: Boolean, default: false },
   deliveryMethod: { type: String, enum: ['email', 'whatsapp'], default: 'email' }
 }, { timestamps: true });

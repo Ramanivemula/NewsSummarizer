@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Mail, Lock, User, Globe, Send } from 'lucide-react';
+import { Mail, Lock, User, Globe } from 'lucide-react';
 import image from '../assets/image.png';
-import { Link } from 'react-router-dom'; // ✅ Make sure this is imported
+import { Link, useNavigate } from 'react-router-dom';
+
 
 function SignUp() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    newsTypes: '',
     country: '',
-    state: '',
+    category: '',
     notifyDaily: false,
     deliveryMethod: 'email',
   });
 
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
+
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -29,8 +31,9 @@ function SignUp() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/auth/register', formData);
+      await axios.post('http://localhost:5000/api/auth/register', formData);
       setMessage('✅ Registered Successfully!');
+      setTimeout(() => navigate('/login'), 1500);
     } catch (err) {
       setMessage(`❌ ${err.response?.data?.message || 'Error occurred'}`);
     }
@@ -52,13 +55,11 @@ function SignUp() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Text Inputs */}
             {[
               { name: 'name', icon: <User />, placeholder: 'Full Name' },
               { name: 'email', icon: <Mail />, placeholder: 'Email', type: 'email' },
               { name: 'password', icon: <Lock />, placeholder: 'Password', type: 'password' },
-              { name: 'newsTypes', icon: <Send />, placeholder: 'News Types (comma-separated)' },
-              { name: 'country', icon: <Globe />, placeholder: 'Country' },
-              { name: 'state', icon: <Globe />, placeholder: 'State' },
             ].map(({ name, icon, placeholder, type = 'text' }) => (
               <div
                 key={name}
@@ -76,6 +77,40 @@ function SignUp() {
                 />
               </div>
             ))}
+
+            {/* Country Dropdown */}
+            <div>
+              <label className="block text-sm mb-1 text-gray-700">Country</label>
+              <select
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm bg-gray-50"
+                required
+              >
+                <option value="">Select Country</option>
+                {["in", "us", "gb", "au", "ca", "de", "fr", "it"].map(c => (
+                  <option key={c} value={c}>{c.toUpperCase()}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Category Dropdown */}
+            <div>
+              <label className="block text-sm mb-1 text-gray-700">Category</label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm bg-gray-50"
+                required
+              >
+                <option value="">Select Category</option>
+                {["top", "business", "entertainment", "environment", "food", "health", "politics", "science", "sports", "technology", "tourism", "world"].map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
 
             {/* Checkbox */}
             <div className="flex items-center space-x-2 text-sm">
@@ -111,7 +146,7 @@ function SignUp() {
             </button>
           </form>
 
-          {/* ✅ Login Redirect */}
+          {/* Login Redirect */}
           <p className="text-center text-sm text-gray-600 mt-2">
             Already registered?{' '}
             <Link to="/login" className="text-purple-600 font-medium hover:underline">

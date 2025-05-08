@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
+require('./cron/sendDailySummary');
 
 const app = express();
 app.use(cors());

@@ -5,12 +5,20 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Otp = require('../models/Otp');
 const nodemailer = require('nodemailer');
-const authMiddleware = require('../middleware/authMiddleware')
+const authMiddleware = require('../middleware/authMiddleware');
 
 // POST /auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, newsTypes, country, state, notifyDaily, deliveryMethod } = req.body;
+    const {
+      name,
+      email,
+      password,
+      country,
+      category,
+      notifyDaily,
+      deliveryMethod
+    } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'User already exists' });
@@ -21,9 +29,8 @@ router.post('/register', async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      newsTypes,
       country,
-      state,
+      category,
       notifyDaily,
       deliveryMethod
     });
@@ -61,14 +68,12 @@ router.post('/login', async (req, res) => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min
 
-    // Save OTP
     await Otp.findOneAndUpdate(
       { email },
       { code, expiresAt },
       { upsert: true, new: true }
     );
 
-    // Send OTP via email
     await transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: email,
@@ -76,7 +81,6 @@ router.post('/login', async (req, res) => {
       text: `Your OTP is: ${code}. It will expire in 5 minutes.`,
     });
 
-    // Respond back to frontend
     res.status(200).json({ message: 'OTP sent to email' });
   } catch (err) {
     console.error('Login error:', err);
@@ -113,21 +117,20 @@ router.post('/verify-otp', async (req, res) => {
     user: {
       name: user.name,
       email: user.email,
-      newsTypes: user.newsTypes,
       country: user.country,
-      state: user.state,
+      category: user.category,
       notifyDaily: user.notifyDaily,
       deliveryMethod: user.deliveryMethod
     }
   });
 });
 
-// Add this in authRoutes.js temporarily
+// Test Email
 router.get('/test-email', async (req, res) => {
   try {
     await transporter.sendMail({
       from: process.env.EMAIL_FROM,
-      to: 'ramani.vemula@mitaoe.ac.in', // Replace with your test email
+      to: 'ramani.vemula@mitaoe.ac.in', // Replace this with your test email
       subject: 'Test OTP Email',
       text: 'If you receive this, OTP emails will work.'
     });
@@ -137,9 +140,8 @@ router.get('/test-email', async (req, res) => {
   }
 });
 
-const { authenticateToken } = require('../middleware/authMiddleware');
-
-router.get('/me', authenticateToken, async (req, res) => {
+// Authenticated user profile
+router.get('/me', authMiddleware.authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -149,6 +151,5 @@ router.get('/me', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 module.exports = router;

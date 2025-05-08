@@ -1,0 +1,2 @@
+# NewsSummarizer
+Major Project

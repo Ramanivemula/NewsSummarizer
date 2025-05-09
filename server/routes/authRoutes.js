@@ -5,9 +5,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Otp = require('../models/Otp');
 const nodemailer = require('nodemailer');
-const authMiddleware = require('../middleware/authMiddleware');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
-// POST /auth/register
 router.post('/register', async (req, res) => {
   try {
     const {
@@ -141,7 +140,7 @@ router.get('/test-email', async (req, res) => {
 });
 
 // Authenticated user profile
-router.get('/me', authMiddleware.authenticateToken, async (req, res) => {
+router.get('/me', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -149,6 +148,27 @@ router.get('/me', authMiddleware.authenticateToken, async (req, res) => {
     res.json({ user });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PUT /auth/update
+router.put('/update', authenticateToken, async (req, res) => {
+  try {
+    const updates = req.body;
+    const userId = req.user.id;
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updates, {
+      new: true,
+      runValidators: true,
+    }).select('-password');
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ message: 'Profile updated successfully', user: updatedUser });
+  } catch (err) {
+    res.status(500).json({ message: 'Update failed', error: err.message });
   }
 });
 
